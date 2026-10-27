@@ -9,6 +9,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Regex Tester Pro**: Initial tool implementation.
+  - Real-time matching with inline highlighting and per-match selection.
+  - Capture-group breakdown with names, values, and spans.
+  - Token-by-token pattern explanation with group depth.
+  - Searchable, category-filtered cheat sheet (35 entries).
+  - Flag toggles (`g`, `i`, `m`, `s`, `u`) in the toolbar and pattern bar.
+  - Six-sample test string library, saved patterns, and evaluation history.
+  - JSON and Markdown match reports plus PNG/JPEG/WebP/PDF canvas export.
+  - Keyboard shortcuts for re-running, saving, clearing, and exporting.
+  - Unit coverage for the engine, explanation, reference data, reports, and components.
+
+### Added
+
 - **package.json**: Added description, license, and repository URL fields to fix audit issues.
 - **README**: Added CI and License badges.
 

@@ -12,18 +12,15 @@ import { cn } from '@/lib/utils';
 import { generateJsonLd, generateToolMetadata } from '@/lib/seo';
 import toolConfig from '@/tool/tool.config';
 import { getPublicSiteUrl, templateMetadata } from '@/tool/template-metadata';
-import { notepadTool } from '@/tool/tool-definition';
+import { initialRegexState, regexTool } from '@/tool/tool-definition';
+import { evaluateRegex } from '@/tool/lib/regex';
 import { ToolCanvas } from '@/tool/components/tool-canvas';
 import { ToolSidebar } from '@/tool/components/tool-sidebar';
 import { ToolToolbar } from '@/tool/components/tool-toolbar';
 import type { ExporterLoader } from '@itsjust/core';
 
-vi.mock('next/link', () => ({
-  default: ({ href, children, ...props }: { href: string; children: ReactNode }) => (
-    <a href={href} {...props}>
-      {children}
-    </a>
-  ),
+vi.mock('next/dynamic', () => ({
+  default: () => () => <div data-testid="dynamic-tool-client">dynamic-tool-client</div>,
 }));
 
 vi.mock('@/app/tool-client-wrapper', () => ({
@@ -52,6 +49,7 @@ describe('app and seo', () => {
     expect(ogUrl).toContain('/og.svg');
     expect(jsonLd.url).toBe('http://localhost:3000');
     expect(jsonLd.featureList.length).toBeGreaterThan(0);
+    expect(jsonLd.name).toBe('Regex Tester Pro');
   });
 
   it('returns site manifest, robots and sitemap', () => {
@@ -92,20 +90,21 @@ describe('app and seo', () => {
   it('covers tool definition and helper exports', async () => {
     expect(cn('a', undefined, 'b', false, null, 'c')).toBe('a b c');
     expect(getPublicSiteUrl()).toBe('http://localhost:3000');
-    expect(notepadTool.deserialize({ text: 'x' })).toEqual({
+    expect(regexTool.deserialize({ pattern: 'a', testText: 'b' })).toEqual({
       success: true,
-      data: { text: 'x' },
+      data: {
+        pattern: 'a',
+        testText: 'b',
+        flags: ['g', 'i'],
+        cheatSheetQuery: '',
+        savedPatterns: [],
+        history: [],
+      },
     });
-    expect(notepadTool.deserialize({ nope: true })).toEqual({
-      success: false,
-      error: 'Invalid data format: expected { text: string, title?: string }',
-    });
-    expect(notepadTool.serialize({ text: 'x' })).toContain('"text": "x"');
-    expect(notepadTool.deserialize({ text: 'x', title: 'My Note' })).toEqual({
-      success: true,
-      data: { text: 'x', title: 'My Note' },
-    });
-    const exporters = notepadTool.exporters ?? [];
+    expect(regexTool.deserialize({ nope: true }).success).toBe(false);
+    expect(regexTool.serialize(initialRegexState)).toContain('"pattern"');
+
+    const exporters = regexTool.exporters ?? [];
     expect(exporters).toHaveLength(4);
     const first = exporters[0];
     expect(first).toBeDefined();
@@ -115,17 +114,53 @@ describe('app and seo', () => {
     expect(resolved.format).toBe('png');
   });
 
-  it('renders tool components', () => {
+  it('renders the tool components', () => {
+    const evaluation = evaluateRegex(initialRegexState.pattern, initialRegexState.flags, 'a@b.co');
     render(
       <>
-        <ToolToolbar />
-        <ToolSidebar text="Hello world" fontSize={16} onFontSizeChange={() => {}} />
-        <ToolCanvas text="" fontSize={16} />
+        <ToolToolbar
+          flags={initialRegexState.flags}
+          onToggleFlag={() => {}}
+          onLoadSample={() => {}}
+          samples={[{ id: 'email', label: 'Email addresses' }]}
+          onSavePattern={() => {}}
+          onClear={() => {}}
+          onExportReport={() => {}}
+          canSave
+        />
+        <ToolSidebar
+          evaluation={evaluation}
+          savedPatterns={[]}
+          history={[]}
+          onLoadSavedPattern={() => {}}
+          onDeleteSavedPattern={() => {}}
+          onRestoreHistory={() => {}}
+          onClearHistory={() => {}}
+          cheatSheet={<div>cheat</div>}
+        />
+        <ToolCanvas
+          pattern={initialRegexState.pattern}
+          flags={initialRegexState.flags}
+          testText="a@b.co"
+          evaluation={evaluation}
+          onPatternChange={() => {}}
+          onTestTextChange={() => {}}
+          onToggleFlag={() => {}}
+        />
       </>
     );
 
-    expect(screen.getByRole('link', { name: 'Open help page' })).toBeInTheDocument();
-    expect(screen.getByText('11')).toBeInTheDocument(); // char count for "Hello world"
-    expect(screen.getByRole('application', { name: 'Notepad canvas' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Save current pattern' })).toBeInTheDocument();
+    expect(screen.getByText('Match stats')).toBeInTheDocument();
+    expect(screen.getByText('cheat')).toBeInTheDocument();
+    expect(screen.getByRole('application', { name: 'Regex tester canvas' })).toBeInTheDocument();
+  });
+});
+
+describe('template metadata', () => {
+  it('derives the app name from the tool config', () => {
+    expect(templateMetadata.appName).toBe(toolConfig.name);
+    expect(templateMetadata.htmlLang).toBe('en');
+    expect(templateMetadata.iconPath).toBe('/icon.svg');
   });
 });

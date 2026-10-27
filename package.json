@@ -1,14 +1,14 @@
 {
-  "name": "template",
+  "name": "regex-tester-pro",
   "version": "1.4.0",
   "private": true,
-  "description": "A Next.js template for building specialized single-purpose web tools. Each tool does ONE thing well.",
+  "description": "Regex Tester Pro \u2014 real-time regular expression matching with capture groups, explanation, and a cheat sheet.",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/ItsJust-tools/template.git"
+    "url": "git+https://github.com/ItsJust-tools/regex-tester-pro.git"
   },
-  "homepage": "https://github.com/ItsJust-tools/template",
+  "homepage": "https://github.com/ItsJust-tools/regex-tester-pro",
   "workspaces": [
     "packages/*"
   ],
