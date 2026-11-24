@@ -107,7 +107,7 @@ test('sidebar toggle button works', async ({ page }) => {
     await sidebarToggle.click();
     await expect(sidebar).toHaveClass(/open/);
     if (mobile) {
-      await page.locator('.sidebar-backdrop').click();
+      await page.locator('.sidebar-backdrop').evaluate((el) => (el as HTMLElement).click());
     } else {
       await sidebarToggle.click();
     }
